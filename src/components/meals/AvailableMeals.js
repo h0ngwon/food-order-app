@@ -5,14 +5,18 @@ import MealItem from '../meals/mealitem/MealItem';
 
 const AvailableMeals = () => {
 	const [meals, setMeals] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(true);
+	const [httpError, setHttpError] = useState();
 
 	useEffect(() => {
 		const fetchMeals = async () => {
-            
 			const response = await fetch(
 				'https://react-http-practice-647b8-default-rtdb.firebaseio.com/meals.json'
 			);
+
+			if (!response.ok) {
+				throw new Error('문제가 발생했습니다.');
+			}
 			const responseData = await response.json();
 			const loadedData = [];
 
@@ -25,10 +29,30 @@ const AvailableMeals = () => {
 				});
 			}
 			setMeals(loadedData);
+			setIsLoading(false);
 		};
 
-		fetchMeals();
+		fetchMeals().catch((error) => {
+			setIsLoading(false);
+			setHttpError(error.message);
+		});
 	}, []);
+
+	if (isLoading) {
+		return (
+			<section className={styles.mealsLoading}>
+				<p>로딩중 ...</p>
+			</section>
+		);
+	}
+
+	if (httpError) {
+		return (
+			<section className={styles.mealsError}>
+				<p>{httpError}</p>
+			</section>
+		);
+	}
 
 	const mealsList = meals.map((meal) => (
 		<MealItem
